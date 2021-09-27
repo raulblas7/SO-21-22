@@ -14,11 +14,39 @@ extern char *use;
  *
  * Returns the number of bytes actually copied or -1 if an error occured.
  */
-int
-copynFile(FILE * origin, FILE * destination, int nBytes)
+int copynFile(FILE *origin, FILE *destination, int nBytes)
 {
 	// Complete the function
-	return -1;
+	if(origin == NULL){
+		perror("Apertura de origin en copynFile fallida\n");
+		return -1;
+	}
+
+	if(destination == NULL){
+		perror("Apertura de destination en copynFile fallida\n");
+		return -1;
+	}
+
+	char* buffer = malloc(sizeof(char) * nBytes);
+	size_t resultado;
+    int numbytes=0;
+	while (!feof(origin) && numbytes<nBytes) 
+  	{
+		resultado = fread(&buffer, sizeof(buffer), 1, origin);
+		if (resultado != 1)
+		{
+			return -1;
+		}
+		numbytes++;
+  	}
+
+	if(fwrite(&buffer, sizeof(buffer), 1, destination) != 1){
+			//error
+			perror("Lectura del numero de fichero en readHeader fallida\n");
+			return -1;
+	}
+
+	return numbytes;
 }
 
 /** Loads a string from a file.
@@ -32,11 +60,32 @@ copynFile(FILE * origin, FILE * destination, int nBytes)
  * 
  * Returns: !=NULL if success, NULL if error
  */
-char*
-loadstr(FILE * file)
+char *
+loadstr(FILE *file)
 {
 	// Complete the function
-	return NULL;
+	if(file == NULL) return NULL;
+    
+	//Averiguamos el tamaño del string
+	size_t tam = 0;
+	char caracter;
+
+	while((caracter = getc(file)) != '\0')
+	{
+		if(caracter == EOF) return NULL;
+		tam++;
+	}
+
+	char* str =malloc(tam + 1);
+
+	//Retrocedemos en la lectura del archivo el numero de elementos que hemos
+	//conseguido leer por el tamaño de esos elementos en bytes
+	int result = fseek(file, -((tam+1)*sizeof(char)), SEEK_CUR);
+	if(result == -1) return NULL;
+
+	if(fread(str, sizeof(char), tam + 1,file) < tam) return NULL;
+
+	return str;
 }
 
 /** Read tarball header and store it in memory.
@@ -48,11 +97,54 @@ loadstr(FILE * file)
  * On success it returns the starting memory address of an array that stores 
  * the (name,size) pairs read from the tar file. Upon failure, the function returns NULL.
  */
-stHeaderEntry*
-readHeader(FILE * tarFile, int *nFiles)
+stHeaderEntry *
+readHeader(FILE *tarFile, int *nFiles)
 {
-	// Complete the function
-	return NULL;
+	stHeaderEntry *array = NULL;
+	
+
+	//apertura de tarFile
+	if(tarFile == NULL){
+		//error
+		perror("Apertura en readHeader fallida\n");
+	}
+
+	// Leemos el numero de ficheros(N) del tarFile y lo volcamos en nr_files...
+	if(fread(&nFiles, sizeof(int), 1, tarFile) != 1){
+		//error
+		perror("Lectura del numero de fichero en readHeader fallida\n");
+	}
+
+	/* Reservamos memoria para el array */
+	array = malloc(sizeof(stHeaderEntry) * (*nFiles));
+	//Leemos la metainformacion del tarFile y la volcamos en el array...
+	char* buffer = malloc(sizeof(char) * 256);
+
+	for(int i = 0; i < (*nFiles); ++i){
+		//lectura del nombre
+		char* name = loadstr(tarFile);
+
+		if(name == NULL) return -1;
+
+		array[i].name = malloc(strlen(name));
+
+		if(array[i].name == NULL)return -1;
+
+		//copia en array name lo almacenado en buffer
+		strcpy(array[i].name, name);
+
+		//lectura del tamaño
+		int s = 0;
+		if(fread(&s, sizeof(int), 1, tarFile) != 1){
+			//error
+			perror("Lectura del size en readHeader fallida\n");
+			return -1;
+		}
+		array[i].size = s;
+	}
+
+	/* Devolvemos los valores leidos a la funcion invocadora */
+	return array;
 }
 
 /** Creates a tarball archive 
@@ -76,8 +168,7 @@ readHeader(FILE * tarFile, int *nFiles)
  * pairs occupy strlen(name)+1 bytes.
  *
  */
-int
-createTar(int nFiles, char *fileNames[], char tarName[])
+int createTar(int nFiles, char *fileNames[], char tarName[])
 {
 	// Complete the function
 	return EXIT_FAILURE;
@@ -97,8 +188,7 @@ createTar(int nFiles, char *fileNames[], char tarName[])
  * stored in the data section of the tarball.
  *
  */
-int
-extractTar(char tarName[])
+int extractTar(char tarName[])
 {
 	// Complete the function
 	return EXIT_FAILURE;
