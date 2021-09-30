@@ -182,7 +182,7 @@ readHeader(FILE *tarFile, int *nFiles)
 int createTar(int nFiles, char *fileNames[], char tarName[])
 {
 	// Complete the function
-	FILE *tar = fopen(tarName, "+w");
+	FILE *tar = fopen(tarName, "w");
 
 	if (tar == NULL)
 	{
@@ -206,7 +206,7 @@ int createTar(int nFiles, char *fileNames[], char tarName[])
 	if (result == -1)
 		return EXIT_FAILURE;
 
-	for (int i = 0; i < nFiles; i++)
+	for (int i = 0; (i < nFiles); i++)
 	{
 		FILE *arc = fopen(fileNames[i], "r");
 		int arcBytes = copynFile(arc, tar, sizeof(arc));
