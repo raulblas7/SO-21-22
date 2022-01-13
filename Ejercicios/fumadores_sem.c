@@ -21,7 +21,7 @@ const char * ing2str[] = {
 };
 
 int table[3] = {0};
-sem_t m, agentq;
+sem_t agentq;
 sem_t semsmokers[3];
 
 void smoke(int ing0)
