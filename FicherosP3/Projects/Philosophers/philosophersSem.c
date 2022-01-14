@@ -2,18 +2,17 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include "semaphore.h"
 #define NR_PHILOSOPHERS 5
 
 pthread_t philosophers[NR_PHILOSOPHERS];
-pthread_mutex_t forks[NR_PHILOSOPHERS];
-
+sem_t forks[NR_PHILOSOPHERS];
 void init()
 {
     int i;
     for (i = 0; i < NR_PHILOSOPHERS; i++)
     {
-        pthread_mutex_init(&forks[i], NULL);
+        sem_init(&forks[i], 0, 1);
     }
 }
 
@@ -54,14 +53,14 @@ void *philosopher(void *i)
         think(nPhilosopher);
 
         /// TRY TO GRAB BOTH FORKS (right and left)
-        pthread_mutex_lock(&forks[first]);
-        pthread_mutex_lock(&forks[second]);
+        sem_wait(&forks[first]);
+        sem_wait(&forks[second]);
 
         eat(nPhilosopher);
 
         // PUT FORKS BACK ON THE TABLE
-        pthread_mutex_unlock(&forks[second]);
-        pthread_mutex_unlock(&forks[first]);
+        sem_post(&forks[second]);
+        sem_post(&forks[first]);
 
         toSleep(nPhilosopher);
     }
